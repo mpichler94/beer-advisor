@@ -1,0 +1,13 @@
+version: "1.0"
+linter: jetbrains/qodana-jvm:2023.2
+profile:
+  name: qodana.recommended
+projectJDK: "21"
+include:
+  - name: UnusedSymbol
+  - name: CompanionObjectInExtension
+  - name: ConfigurationAvoidance
+  - name: DeprecatedConfigurations
+  - name: IncorrectPluginDslStructure
+  - name: ClassComplexity
+  - name: CyclomaticComplexity

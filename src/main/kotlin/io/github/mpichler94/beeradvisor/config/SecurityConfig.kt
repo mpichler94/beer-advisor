@@ -5,9 +5,8 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.invoke
-import org.springframework.security.core.userdetails.User
-import org.springframework.security.core.userdetails.UserDetailsService
-import org.springframework.security.provisioning.InMemoryUserDetailsManager
+import org.springframework.security.crypto.factory.PasswordEncoderFactories
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint
 import org.springframework.security.web.context.DelegatingSecurityContextRepository
@@ -68,20 +67,6 @@ class SecurityConfig {
         }
     }
 
-    //@Bean
-    fun userDetailsService(): UserDetailsService {
-        val users = User.withDefaultPasswordEncoder()
-        val user = users
-            .username("user")
-            .password("password")
-            .roles("USER")
-            .build()
-        val admin = users
-            .username("admin")
-            .password("admin")
-            .roles("USER", "ADMIN")
-            .build()
-
-        return InMemoryUserDetailsManager(user, admin)
-    }
+    @Bean
+    fun passwordEncoder(): PasswordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
 }
