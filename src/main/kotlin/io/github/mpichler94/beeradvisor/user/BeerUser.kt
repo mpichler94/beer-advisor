@@ -4,18 +4,23 @@ import jakarta.persistence.*
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 
-@Entity
+@Entity(name = "Users")
 class BeerUser(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long,
+    @Column(nullable = false, updatable = false)
+    @SequenceGenerator(name="user_sequence", sequenceName = "user_sequence", allocationSize = 1, initialValue = 10000)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_sequence")
+    val id: Long?,
     private val username: String,
     private val password: String,
-    private val accountNonExpired: Boolean,
-    private val accountNonLocked: Boolean,
-    private val credentialsNonExpired: Boolean,
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
-    private val authorities: Set<BeerAuthority>
+    private val authorities: Set<BeerAuthority> = setOf(),
+    @Column(columnDefinition = "boolean default true")
+    private val accountNonExpired: Boolean = true,
+    @Column(columnDefinition = "boolean default true")
+    private val accountNonLocked: Boolean = true,
+    @Column(columnDefinition = "boolean default true")
+    private val credentialsNonExpired: Boolean = true
 ) : UserDetails {
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> {

@@ -1,8 +1,10 @@
 package io.github.mpichler94.beeradvisor.user
 
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/api/user")
@@ -24,22 +26,19 @@ class UserController(
         }
         val createdUser = userRepository.save(
             BeerUser(
-                0,
+                null,
                 user.username,
                 passwordEncoder.encode(user.password),
-                true,
-                true,
-                true,
-                setOf()
+                setOf(authority.get()),
             )
         )
-        return UserDto(createdUser.username, createdUser.password)
+        return UserDto(createdUser.username)
     }
 
     @GetMapping
-    fun user(request: HttpServletRequest): String {
-        return request.userPrincipal?.name ?: ""
+    private fun user(request: HttpServletRequest): UserDto {
+        return UserDto(request.userPrincipal?.name ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED))
     }
 }
 
-internal class UserDto(val username: String, val password: String)
+internal class UserDto(val username: String, val password: String? = null)

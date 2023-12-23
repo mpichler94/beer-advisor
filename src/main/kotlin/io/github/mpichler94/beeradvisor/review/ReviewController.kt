@@ -1,5 +1,6 @@
 package io.github.mpichler94.beeradvisor.review
 
+import io.github.mpichler94.beeradvisor.beer.BeerRepository
 import io.github.mpichler94.beeradvisor.user.UserRepository
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import jakarta.servlet.http.HttpServletRequest
@@ -12,39 +13,44 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping(value = ["/api/reviews"], produces = [MediaType.APPLICATION_JSON_VALUE])
-class ReviewController(private val repository: ReviewRepository, private val userRepository: UserRepository) {
+@RequestMapping(value = ["/api/beer/{beerId}/review"], produces = [MediaType.APPLICATION_JSON_VALUE])
+class ReviewController(private val repository: ReviewRepository, private val beerRepository: BeerRepository, private val userRepository: UserRepository) {
 
     @PostMapping
     @ApiResponse(responseCode = "201")
-    private fun createReview(
+    private fun createReview(@PathVariable beerId: Long,
         @RequestBody @Valid review: ReviewDto,
         request: HttpServletRequest
     ): ResponseEntity<ReviewDto> {
+        val beer = beerRepository.findById(beerId)
+        Assert.state(beer.isPresent, "Beer $beerId does not exist")
+
         val username = request.userPrincipal.name
         val user = userRepository.findByUsername(username)
         Assert.state(user.isPresent, "User DB corrupt")
-        val result = repository.save(Review(0, user.get(), review.stars, review.content))
+
+        val result = repository.save(Review(null, user.get(), beer.get(), review.stars, review.content))
+
         return ResponseEntity(
-            ReviewDto(result.id, result.author.username, result.content, result.stars),
+            ReviewDto(result.author.username, result.content, result.stars),
             HttpStatus.CREATED
         )
     }
 
     @GetMapping
     private fun reviews(): Iterable<ReviewDto> {
-        return repository.findAll().map { ReviewDto(it.id, it.author.username, it.content, it.stars) }
+        return repository.findAll().map { ReviewDto(it.author.username, it.content, it.stars) }
     }
 
 
     @GetMapping("/:beerId")
     private fun reviewsForBeer(@RequestParam beerId: Optional<Long>): Iterable<ReviewDto> {
-        return repository.findAll().map { ReviewDto(it.id, it.author.username, it.content, it.stars) }
+        return repository.findAll().map { ReviewDto(it.author.username, it.content, it.stars) }
     }
 
     @GetMapping("/{id}")
     private fun getReview(@PathVariable id: Long): Optional<ReviewDto> {
-        return repository.findById(id).map { ReviewDto(it.id, it.author.username, it.content, it.stars) }
+        return repository.findById(id).map { ReviewDto(it.author.username, it.content, it.stars) }
     }
 
     @PutMapping("/{id}")
@@ -60,4 +66,4 @@ class ReviewController(private val repository: ReviewRepository, private val use
     }
 }
 
-internal class ReviewDto(val id: Long, val author: String?, val content: String, val stars: Int)
+internal class ReviewDto(val author: String?, val content: String, val stars: Int)

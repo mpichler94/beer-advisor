@@ -7,6 +7,9 @@ plugins {
     kotlin("jvm") version "1.9.20"
     kotlin("plugin.spring") version "1.9.20"
     kotlin("plugin.jpa") version "1.9.20"
+
+    id("com.diffplug.spotless") version "6.23.3"
+    id("org.jlleitschuh.gradle.ktlint") version "12.0.3"
 }
 
 group = "io.github.mpichler94"
@@ -49,4 +52,14 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+spotless {
+    kotlin {
+        ktlint()
+    }
+}
+
+ktlint {
+    outputToConsole = true
 }
