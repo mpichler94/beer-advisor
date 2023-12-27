@@ -27,7 +27,6 @@ import java.net.URI
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(private val mapper: ObjectMapper) {
-
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http {
@@ -39,22 +38,31 @@ class SecurityConfig(private val mapper: ObjectMapper) {
                 authorize("/**", permitAll)
             }
             securityContext {
-                securityContextRepository = DelegatingSecurityContextRepository(
-                    RequestAttributeSecurityContextRepository(),
-                    HttpSessionSecurityContextRepository()
-                )
+                securityContextRepository =
+                    DelegatingSecurityContextRepository(
+                        RequestAttributeSecurityContextRepository(),
+                        HttpSessionSecurityContextRepository(),
+                    )
             }
             formLogin {
                 loginProcessingUrl = "/api/user/login"
-                authenticationSuccessHandler = AuthenticationSuccessHandler { _, response, _ -> response.status = HttpServletResponse.SC_OK }
-                authenticationFailureHandler = AuthenticationFailureHandler { _, response, exception ->
-                    val detail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid credentials provided")
-                    detail.type = URI.create("about:blank")
-                    detail.title = "Bad Credentials"
-                    detail.properties = mapOf("message" to exception.message)
-                    response.status = HttpServletResponse.SC_BAD_REQUEST
-                    mapper.writeValue(response.writer, detail)
-                }
+                authenticationSuccessHandler =
+                    AuthenticationSuccessHandler {
+                            _,
+                            response,
+                            _,
+                        ->
+                        response.status = HttpServletResponse.SC_OK
+                    }
+                authenticationFailureHandler =
+                    AuthenticationFailureHandler { _, response, exception ->
+                        val detail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid credentials provided")
+                        detail.type = URI.create("about:blank")
+                        detail.title = "Bad Credentials"
+                        detail.properties = mapOf("message" to exception.message)
+                        response.status = HttpServletResponse.SC_BAD_REQUEST
+                        mapper.writeValue(response.writer, detail)
+                    }
                 permitAll = true
             }
             exceptionHandling {
@@ -71,12 +79,13 @@ class SecurityConfig(private val mapper: ObjectMapper) {
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
-        val config = CorsConfiguration().apply {
-            allowedOrigins = listOf("http://localhost:8081")
-            allowedMethods = listOf("*")
-            allowedHeaders = listOf("*")
-            allowCredentials = true
-        }
+        val config =
+            CorsConfiguration().apply {
+                allowedOrigins = listOf("http://localhost:8081")
+                allowedMethods = listOf("*")
+                allowedHeaders = listOf("*")
+                allowCredentials = true
+            }
 
         return UrlBasedCorsConfigurationSource().apply {
             registerCorsConfiguration("/**", config)

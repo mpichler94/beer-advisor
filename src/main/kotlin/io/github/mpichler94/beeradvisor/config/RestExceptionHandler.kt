@@ -13,7 +13,6 @@ import org.springframework.web.server.ResponseStatusException
 
 @RestControllerAdvice(annotations = [RestController::class])
 class RestExceptionHandler {
-
     @ExceptionHandler(NotFoundException::class)
     fun handleNotFound(exception: NotFoundException): ResponseEntity<ErrorResponse> {
         val errorResponse = ErrorResponse()
@@ -24,18 +23,18 @@ class RestExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
-    fun handleMethodArgumentNotValid(exception: MethodArgumentNotValidException):
-            ResponseEntity<ErrorResponse> {
+    fun handleMethodArgumentNotValid(exception: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
         val bindingResult: BindingResult = exception.bindingResult
-        val fieldErrors: List<FieldError> = bindingResult.fieldErrors
-            .stream()
-            .map { error ->
-                var fieldError = FieldError()
-                fieldError.errorCode = error.code
-                fieldError.field = error.field
-                fieldError
-            }
-            .toList()
+        val fieldErrors: List<FieldError> =
+            bindingResult.fieldErrors
+                .stream()
+                .map { error ->
+                    var fieldError = FieldError()
+                    fieldError.errorCode = error.code
+                    fieldError.field = error.field
+                    fieldError
+                }
+                .toList()
         val errorResponse = ErrorResponse()
         errorResponse.httpStatus = HttpStatus.BAD_REQUEST.value()
         errorResponse.exception = exception::class.simpleName
@@ -55,7 +54,7 @@ class RestExceptionHandler {
     @ExceptionHandler(Throwable::class)
     @ApiResponse(
         responseCode = "4xx/5xx",
-        description = "Error"
+        description = "Error",
     )
     fun handleThrowable(exception: Throwable): ResponseEntity<ErrorResponse> {
         exception.printStackTrace()
@@ -64,5 +63,4 @@ class RestExceptionHandler {
         errorResponse.exception = exception::class.simpleName
         return ResponseEntity(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR)
     }
-
 }
